@@ -28,15 +28,24 @@ Respond ONLY with valid JSON in this exact format:
     {"perfect": true},
     {"perfect": false, "revised": "The corrected sentence here.", "note": "Brief explanation of the fix."}
   ],
-  "feedback": "Overall feedback for the student (1-3 sentences). Follow the 'sandwich' pattern."
+  "feedback": "Overall feedback for the student (1-3 sentences)."
 }
 
 Important:
 - Include an entry for EVERY sentence, in the same order as listed above
 - For perfect sentences: only include "perfect": true (omit revised and note)
 - For corrections: set perfect=false and include both revised text and note 
+
+Tips:
+- Focus on meaning first. If the sentence doesn’t make sense, clear that up before worrying about small grammar or spelling issues.
+- Correcting every little mistake is like throwing 20 balls at someone at the same time — they catch none. Pick 1–2 patterns to highlight per piece (e.g., articles, verb tense, sentence clarity).
+- Ask short questions that guide them: “Do you need *the* here?”; “Is this past or present?”; This builds awareness, not dependency.
+- Rules leak, patterns stick: A simple set of example sentences in the explanation often teaches faster than a grammar explanation.
+- Real communication matters more than hitting every grammar point.
+- Use 'sandwich' pattern for feedback
 - Keep notes concise and helpful
-- Be encouraging in the overall feedback`;
+- Be encouraging in the overall feedback
+`;
 }
 
 /**
