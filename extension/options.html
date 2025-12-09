@@ -157,11 +157,53 @@
     .status.hidden {
       display: none;
     }
+
+    .security-warning {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .security-warning h3 {
+      margin: 0 0 8px 0;
+      color: #92400e;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .security-warning ul {
+      margin: 8px 0 0 0;
+      padding-left: 20px;
+    }
+
+    .security-warning li {
+      color: #78350f;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .security-warning a {
+      color: #92400e;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
   <h1>LangCorrect Bot Settings</h1>
   <p class="subtitle">Configure your AI provider and API key</p>
+
+  <div class="security-warning">
+    <h3>Security Notice: Bring Your Own API Key</h3>
+    <ul>
+      <li><strong>API keys are stored unencrypted</strong> in your browser's local storage</li>
+      <li>Only use this extension on trusted, personal devices</li>
+      <li>Set spending limits on your API keys at <a href="https://console.anthropic.com/settings/limits" target="_blank">Anthropic</a> or <a href="https://platform.openai.com/usage" target="_blank">OpenAI</a></li>
+      <li>Do not use this extension on shared or public computers</li>
+      <li>Rotate your API keys regularly for security</li>
+    </ul>
+  </div>
 
   <div class="form-group">
     <label>Select AI Provider</label>
