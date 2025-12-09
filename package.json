@@ -4,12 +4,15 @@
   "description": "Chrome extension to auto-correct journals on LangCorrect",
   "type": "module",
   "scripts": {
+    "build": "node scripts/build.js",
+    "build:watch": "node scripts/build.js --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.js"
   },
   "devDependencies": {
     "dotenv": "^16.3.1",
+    "esbuild": "^0.27.1",
     "jsdom": "^23.0.1",
     "vitest": "^2.0.0"
   },
