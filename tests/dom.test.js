@@ -26,6 +26,7 @@ describe('DOM extraction', () => {
       expect(sentences[0]).toEqual({
         id: '1',
         original: "Sample Title",
+        isTitle: true,
       });
     });
 
@@ -44,6 +45,21 @@ describe('DOM extraction', () => {
         '1', '2', '3', '4',
         '5', '6', '7', '8'
       ]);
+    });
+
+    it('should mark sentences with "Post title" badge as titles', () => {
+      const sentences = extractSentences(document);
+
+      // The fixture has the first sentence marked as a title
+      expect(sentences[0].isTitle).toBe(true);
+    });
+
+    it('should not mark sentences without "Post title" badge as titles', () => {
+      const sentences = extractSentences(document);
+
+      expect(sentences[1].isTitle).toBe(false);
+      expect(sentences[2].isTitle).toBe(false);
+      expect(sentences[7].isTitle).toBe(false);
     });
   });
 
