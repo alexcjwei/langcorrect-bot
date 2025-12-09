@@ -36,11 +36,11 @@ describe('buildPrompt', () => {
 });
 
 describe('parseAIResponse', () => {
-  it('should parse a valid JSON response', () => {
+  it('should parse a valid JSON response without index field', () => {
     const response = JSON.stringify({
       corrections: [
-        { index: 1, perfect: false, revised: 'I went to school yesterday.', note: 'Past tense needed.' },
-        { index: 2, perfect: true, revised: '', note: '' },
+        { perfect: false, revised: 'I went to school yesterday.', note: 'Past tense needed.' },
+        { perfect: true },
       ],
       feedback: 'Good effort!',
     });
@@ -69,7 +69,7 @@ describe('parseAIResponse', () => {
   });
 
   it('should handle JSON wrapped in markdown code blocks', () => {
-    const response = '```json\n{"corrections": [{"index": 1, "perfect": true, "revised": "", "note": ""}], "feedback": "Nice!"}\n```';
+    const response = '```json\n{"corrections": [{"perfect": true}], "feedback": "Nice!"}\n```';
 
     const sentences = [{ id: 'id1', original: 'Hello world.' }];
 
@@ -81,7 +81,7 @@ describe('parseAIResponse', () => {
 
   it('should handle missing feedback field', () => {
     const response = JSON.stringify({
-      corrections: [{ index: 1, perfect: true, revised: '', note: '' }],
+      corrections: [{ perfect: true }],
     });
 
     const sentences = [{ id: 'id1', original: 'Test.' }];
@@ -98,12 +98,12 @@ describe('parseAIResponse', () => {
     expect(() => parseAIResponse(response, sentences)).toThrow();
   });
 
-  it('should map index numbers to sentence IDs correctly', () => {
+  it('should map array position to sentence IDs correctly', () => {
     const response = JSON.stringify({
       corrections: [
-        { index: 1, perfect: true, revised: '', note: '' },
-        { index: 2, perfect: false, revised: 'Corrected', note: 'Fix' },
-        { index: 3, perfect: true, revised: '', note: '' },
+        { perfect: true },
+        { perfect: false, revised: 'Corrected', note: 'Fix' },
+        { perfect: true },
       ],
       feedback: '',
     });
@@ -119,5 +119,71 @@ describe('parseAIResponse', () => {
     expect(result.corrections[0].id).toBe('aaa');
     expect(result.corrections[1].id).toBe('bbb');
     expect(result.corrections[2].id).toBe('ccc');
+  });
+
+  it('should handle optional revised and note fields when perfect is true', () => {
+    const response = JSON.stringify({
+      corrections: [
+        { perfect: true },
+        { perfect: true },
+      ],
+      feedback: 'Great!',
+    });
+
+    const sentences = [
+      { id: 'id1', original: 'Perfect sentence.' },
+      { id: 'id2', original: 'Another perfect one.' },
+    ];
+
+    const result = parseAIResponse(response, sentences);
+
+    expect(result.corrections[0]).toEqual({
+      id: 'id1',
+      perfect: true,
+      revised: '',
+      note: '',
+    });
+    expect(result.corrections[1]).toEqual({
+      id: 'id2',
+      perfect: true,
+      revised: '',
+      note: '',
+    });
+  });
+
+  it('should require revised and note when perfect is false', () => {
+    const response = JSON.stringify({
+      corrections: [
+        { perfect: false, revised: 'Fixed sentence.', note: 'Grammar fix.' },
+      ],
+      feedback: 'Good work!',
+    });
+
+    const sentences = [{ id: 'id1', original: 'Broken sentence.' }];
+
+    const result = parseAIResponse(response, sentences);
+
+    expect(result.corrections[0]).toEqual({
+      id: 'id1',
+      perfect: false,
+      revised: 'Fixed sentence.',
+      note: 'Grammar fix.',
+    });
+  });
+
+  it('should throw error when corrections array length does not match sentences', () => {
+    const response = JSON.stringify({
+      corrections: [
+        { perfect: true },
+      ],
+      feedback: 'Feedback',
+    });
+
+    const sentences = [
+      { id: 'id1', original: 'First.' },
+      { id: 'id2', original: 'Second.' },
+    ];
+
+    expect(() => parseAIResponse(response, sentences)).toThrow();
   });
 });

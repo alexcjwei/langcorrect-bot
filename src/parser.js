@@ -11,7 +11,7 @@ export function buildPrompt(sentences) {
   return `You are an English language teacher helping a student improve their writing. Review each sentence and provide corrections.
 
 For each sentence:
-- If it's correct, mark it as "perfect": true
+- If it's correct, mark it as "perfect": true (omit revised and note)
 - If it needs correction, provide the revised sentence and a brief note explaining the fix
 
 Sentences to review:
@@ -20,16 +20,16 @@ ${numberedSentences}
 Respond ONLY with valid JSON in this exact format:
 {
   "corrections": [
-    {"index": 1, "perfect": true, "revised": "", "note": ""},
-    {"index": 2, "perfect": false, "revised": "The corrected sentence here.", "note": "Brief explanation of the fix."}
+    {"perfect": true},
+    {"perfect": false, "revised": "The corrected sentence here.", "note": "Brief explanation of the fix."}
   ],
   "feedback": "Overall feedback for the student (1-3 sentences). Follow the 'sandwich' pattern."
 }
 
 Important:
-- Include an entry for EVERY sentence, in order
-- For perfect sentences: set perfect=true, revised="", note=""
-- For corrections: set perfect=false, provide revised text and explanation
+- Include an entry for EVERY sentence, in the same order as listed above
+- For perfect sentences: only include "perfect": true (omit revised and note)
+- For corrections: set perfect=false and include both revised text and note 
 - Keep notes concise and helpful
 - Be encouraging in the overall feedback`;
 }
@@ -60,14 +60,14 @@ export function parseAIResponse(response, sentences) {
     throw new Error('AI response missing corrections array');
   }
 
-  // Map index numbers to sentence IDs
-  const corrections = parsed.corrections.map(c => {
-    const sentenceIndex = c.index - 1; // Convert 1-based to 0-based
-    const sentence = sentences[sentenceIndex];
+  // Validate array length matches
+  if (parsed.corrections.length !== sentences.length) {
+    throw new Error(`Corrections array length (${parsed.corrections.length}) does not match sentences length (${sentences.length})`);
+  }
 
-    if (!sentence) {
-      throw new Error(`Invalid correction index: ${c.index}`);
-    }
+  // Map array position to sentence IDs
+  const corrections = parsed.corrections.map((c, index) => {
+    const sentence = sentences[index];
 
     return {
       id: sentence.id,

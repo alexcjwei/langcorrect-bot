@@ -32,3 +32,6 @@ Modify this as a daily workflow to run corrections on new English entries:
 
 Support for correcting multiple languages.
 
+Support starting the tool from the main journal page, so that we can use the native language as additional context when correcting.
+
+Add validation to prevent prompt hacking.
