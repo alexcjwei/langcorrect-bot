@@ -21,22 +21,9 @@ export function extractLevel(document) {
 }
 
 /**
- * Check if a sentence card is for a post title
- * @param {Element} card - The correction card element
- * @returns {boolean} True if the card contains a "Post title" badge
- */
-function isTitleSentence(card) {
-  const badge = card.querySelector('.js-sentence .badge');
-  if (!badge) {
-    return false;
-  }
-  return badge.textContent.trim() === 'Post title';
-}
-
-/**
  * Extract sentences from LangCorrect correction cards
  * @param {Document} document - The DOM document
- * @returns {Array<{id: string, original: string, isTitle: boolean}>} Array of sentence objects
+ * @returns {Array<{id: string, original: string}>} Array of sentence objects
  */
 export function extractSentences(document) {
   const cards = document.querySelectorAll('.js-correction-card');
@@ -49,11 +36,7 @@ export function extractSentences(document) {
     if (id && original) {
       // Decode HTML entities
       const decoded = decodeHTMLEntities(original);
-      sentences.push({
-        id,
-        original: decoded,
-        isTitle: isTitleSentence(card),
-      });
+      sentences.push({ id, original: decoded });
     }
   });
 

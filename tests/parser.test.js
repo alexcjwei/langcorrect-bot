@@ -58,38 +58,6 @@ describe('buildPrompt', () => {
     expect(prompt).toContain('Test sentence.');
     expect(prompt).toContain('level is unknown');
   });
-
-  it('should mark title sentences with [TITLE] prefix', () => {
-    const sentences = [
-      { id: '1', original: 'Post Title', isTitle: true },
-      { id: '2', original: 'Regular sentence.' },
-    ];
-
-    const prompt = buildPrompt(sentences);
-
-    expect(prompt).toContain('[TITLE] Post Title');
-    expect(prompt).toContain('2. Regular sentence.');
-  });
-
-  it('should not mark non-title sentences with [TITLE] prefix', () => {
-    const sentences = [
-      { id: '1', original: 'Regular sentence.' },
-      { id: '2', original: 'Another sentence.' },
-    ];
-
-    const prompt = buildPrompt(sentences);
-
-    expect(prompt).toContain('1. Regular sentence.');
-    expect(prompt).toContain('2. Another sentence.');
-  });
-
-  it('should include instructions for handling titles specially', () => {
-    const sentences = [{ id: '1', original: 'Post Title', isTitle: true }];
-
-    const prompt = buildPrompt(sentences);
-
-    expect(prompt).toContain('title');
-  });
 });
 
 describe('parseAIResponse', () => {

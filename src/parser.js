@@ -1,15 +1,12 @@
 /**
  * Build the prompt to send to the AI for corrections
- * @param {Array<{id: string, original: string, isTitle?: boolean}>} sentences - Array of sentences to correct
+ * @param {Array<{id: string, original: string}>} sentences - Array of sentences to correct
  * @param {string|null} level - The language learner's level (e.g., "A1", "B2") or null if unknown
  * @returns {string} The prompt string
  */
 export function buildPrompt(sentences, level = null) {
   const numberedSentences = sentences
-    .map((s, i) => {
-      const prefix = s.isTitle ? '[TITLE] ' : `${i + 1}. `;
-      return `${prefix}${s.original}`;
-    })
+    .map((s, i) => `${i + 1}. ${s.original}`)
     .join('\n');
 
   const levelContext = level
@@ -21,7 +18,6 @@ export function buildPrompt(sentences, level = null) {
 For each sentence:
 - If it's correct, mark it as "perfect": true (omit revised and note)
 - If it needs correction, provide the revised sentence and a brief note explaining the fix
-- For title sentences (marked with [TITLE]): only mark as perfect or skip entirely. Do not attempt to revise post titles.
 
 Sentences to review:
 ${numberedSentences}
@@ -32,25 +28,15 @@ Respond ONLY with valid JSON in this exact format:
     {"perfect": true},
     {"perfect": false, "revised": "The corrected sentence here.", "note": "Brief explanation of the fix."}
   ],
-  "feedback": "Overall feedback for the student (1-3 sentences)."
+  "feedback": "Overall feedback for the student (1-3 sentences). Follow the 'sandwich' pattern."
 }
 
 Important:
 - Include an entry for EVERY sentence, in the same order as listed above
 - For perfect sentences: only include "perfect": true (omit revised and note)
-- For corrections: set perfect=false and include both revised text and note
-- For title sentences: treat them as final content that should not be revised
-
-Tips:
-- Focus on meaning first. If the sentence doesn’t make sense, clear that up before worrying about small grammar or spelling issues.
-- Correcting every little mistake is like throwing 20 balls at someone at the same time — they catch none. Pick 1–2 patterns to highlight per piece (e.g., articles, verb tense, sentence clarity).
-- Ask short questions that guide them: “Do you need *the* here?”; “Is this past or present?”; This builds awareness, not dependency.
-- Rules leak, patterns stick: A simple set of example sentences in the explanation often teaches faster than a grammar explanation.
-- Real communication matters more than hitting every grammar point.
-- Use 'sandwich' pattern for feedback
+- For corrections: set perfect=false and include both revised text and note 
 - Keep notes concise and helpful
-- Be encouraging in the overall feedback
-`;
+- Be encouraging in the overall feedback`;
 }
 
 /**
