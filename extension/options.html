@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>LangCorrect Bot Settings</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f9fafb;
+    }
+
+    h1 {
+      color: #6b46c1;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #374151;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 16px;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+    }
+
+    .radio-option:hover {
+      border-color: #a78bfa;
+    }
+
+    .radio-option.selected {
+      border-color: #6b46c1;
+      background: #f5f3ff;
+    }
+
+    .radio-option input {
+      display: none;
+    }
+
+    .radio-option .provider-name {
+      font-weight: 500;
+    }
+
+    .radio-option .provider-model {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #6b46c1;
+    }
+
+    .api-key-section {
+      margin-top: 24px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .api-key-section.hidden {
+      display: none;
+    }
+
+    .api-key-section h3 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      color: #374151;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    .help-text a {
+      color: #6b46c1;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      background: #6b46c1;
+      color: white;
+      margin-top: 24px;
+    }
+
+    button:hover {
+      background: #553c9a;
+    }
+
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    .status.success {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .status.error {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>LangCorrect Bot Settings</h1>
+  <p class="subtitle">Configure your AI provider and API key</p>
+
+  <div class="form-group">
+    <label>Select AI Provider</label>
+    <div class="radio-group">
+      <label class="radio-option" id="anthropic-option">
+        <input type="radio" name="provider" value="anthropic">
+        <div>
+          <div class="provider-name">Anthropic</div>
+          <div class="provider-model">Claude Sonnet</div>
+        </div>
+      </label>
+      <label class="radio-option" id="openai-option">
+        <input type="radio" name="provider" value="openai">
+        <div>
+          <div class="provider-name">OpenAI</div>
+          <div class="provider-model">GPT-4o Mini</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div id="anthropic-section" class="api-key-section hidden">
+    <h3>Anthropic API Key</h3>
+    <input type="password" id="anthropic-key" placeholder="sk-ant-...">
+    <p class="help-text">
+      Get your API key from <a href="https://console.anthropic.com/settings/keys" target="_blank">Anthropic Console</a>
+    </p>
+  </div>
+
+  <div id="openai-section" class="api-key-section hidden">
+    <h3>OpenAI API Key</h3>
+    <input type="password" id="openai-key" placeholder="sk-...">
+    <p class="help-text">
+      Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Dashboard</a>
+    </p>
+  </div>
+
+  <button id="save-btn">Save Settings</button>
+
+  <div id="status" class="status hidden"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
