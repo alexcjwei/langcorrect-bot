@@ -68,6 +68,32 @@ function decodeHTMLEntities(text) {
 }
 
 /**
+ * Extract native language text from a journal page
+ * @param {Document} document - The DOM document
+ * @returns {string|null} The native language text or null if not found
+ */
+export function extractNativeText(document) {
+  const cardBody = document.querySelector('.card-body');
+  if (!cardBody) return null;
+
+  // Find paragraphs with lang attribute that is not 'en'
+  const paragraphs = cardBody.querySelectorAll('p[lang]');
+
+  for (const para of paragraphs) {
+    const lang = para.getAttribute('lang');
+    if (lang && lang !== 'en') {
+      // Get text and clean up HTML line breaks
+      let text = para.textContent;
+      // Remove extra whitespace while preserving content structure
+      text = text.replace(/\s+/g, ' ').trim();
+      return text;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Apply corrections to the LangCorrect form
  * @param {Document} document - The DOM document
  * @param {Array<{id: string, perfect: boolean, revised: string, note: string}>} corrections

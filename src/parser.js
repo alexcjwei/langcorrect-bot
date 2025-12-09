@@ -2,9 +2,10 @@
  * Build the prompt to send to the AI for corrections
  * @param {Array<{id: string, original: string}>} sentences - Array of sentences to correct
  * @param {string|null} level - The language learner's level (e.g., "A1", "B2") or null if unknown
+ * @param {string|null} nativeText - Optional native language text for context
  * @returns {string} The prompt string
  */
-export function buildPrompt(sentences, level = null) {
+export function buildPrompt(sentences, level = null, nativeText = null) {
   const numberedSentences = sentences
     .map((s, i) => `${i + 1}. ${s.original}`)
     .join('\n');
@@ -13,8 +14,11 @@ export function buildPrompt(sentences, level = null) {
     ? `You are an English language teacher helping a ${level}-level student improve their writing.`
     : `You are an English language teacher helping a student improve their writing. The student's level is unknown, so adjust your corrections and explanations to be clear and helpful.`;
 
-  return `${levelContext} Review each sentence and provide corrections and explanations${level ? ` appropriate for ${level} level` : ''}.
+  const nativeLanguageContext = nativeText
+    ? `\nThe student's native language text for context:\n${nativeText}\n`
+    : '';
 
+  return `${levelContext} Review each sentence and provide corrections and explanations${level ? ` appropriate for ${level} level` : ''}.${nativeLanguageContext}
 For each sentence:
 - If it's correct, mark it as "perfect": true (omit revised and note)
 - If it needs correction, provide the revised sentence and a brief note explaining the fix
@@ -34,7 +38,7 @@ Respond ONLY with valid JSON in this exact format:
 Important:
 - Include an entry for EVERY sentence, in the same order as listed above
 - For perfect sentences: only include "perfect": true (omit revised and note)
-- For corrections: set perfect=false and include both revised text and note 
+- For corrections: set perfect=false and include both revised text and note
 - Keep notes concise and helpful
 - Be encouraging in the overall feedback`;
 }

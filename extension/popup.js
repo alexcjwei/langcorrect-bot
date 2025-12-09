@@ -6,7 +6,10 @@ const optionsBtn = document.getElementById('options-btn');
 const providerInfoEl = document.getElementById('provider-info');
 
 let sentences = [];
+let nativeText = null;
 let settings = null;
+let isJournalPage = false;
+let isCorrectionPage = false;
 
 // Initialize popup
 async function init() {
@@ -25,26 +28,39 @@ async function init() {
 
   providerInfoEl.textContent = `Using: ${settings.provider === 'anthropic' ? 'Anthropic Claude' : 'OpenAI GPT'}`;
 
-  // Check if we're on a LangCorrect correction page
+  // Check if we're on a LangCorrect journal page
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  if (!tab.url || !tab.url.includes('langcorrect.com/journals/') || !tab.url.includes('make_corrections')) {
-    setStatus('warning', 'Open a LangCorrect journal correction page to use this extension.');
+  if (!tab.url || !tab.url.includes('langcorrect.com/journals/')) {
+    setStatus('warning', 'Open a LangCorrect journal page to use this extension.');
     return;
   }
 
-  // Extract sentences from the page
+  isCorrectionPage = tab.url.includes('make_corrections');
+  isJournalPage = !isCorrectionPage;
+
   try {
-    const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractSentences' });
-    sentences = response.sentences;
+    if (isCorrectionPage) {
+      // Extract sentences from the correction page
+      const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractSentences' });
+      sentences = response.sentences;
 
-    if (sentences.length === 0) {
-      setStatus('warning', 'No sentences found on this page.');
-      return;
+      if (sentences.length === 0) {
+        setStatus('warning', 'No sentences found on this page.');
+        return;
+      }
+
+      setStatus('info', `Found <span id="sentences-count">${sentences.length}</span> sentences to correct.`);
+      correctBtn.disabled = false;
+    } else if (isJournalPage) {
+      // Extract native text from the journal page
+      const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractNativeText' });
+      nativeText = response.nativeText;
+
+      setStatus('info', `Ready to start corrections${nativeText ? ' (with native language context)' : ''}.`);
+      correctBtn.disabled = false;
+      correctBtn.textContent = 'Start Corrections';
     }
-
-    setStatus('info', `Found <span id="sentences-count">${sentences.length}</span> sentences to correct.`);
-    correctBtn.disabled = false;
   } catch (error) {
     // Content script not loaded, try injecting it
     setStatus('warning', 'Please refresh the page and try again.');
@@ -58,45 +74,77 @@ function setStatus(type, message) {
 
 // Handle correct button click
 correctBtn.addEventListener('click', async () => {
-  correctBtn.disabled = true;
-  correctBtn.innerHTML = '<span class="loading"></span>Correcting...';
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  try {
-    // Build the prompt
-    const prompt = buildPrompt(sentences);
+  if (isJournalPage) {
+    // Navigate to the correction page with native text context
+    try {
+      // Extract journal slug from URL
+      const urlParts = tab.url.split('/');
+      const journalSlug = urlParts[urlParts.length - 1];
 
-    // Get the API key based on provider
-    const apiKey = settings.provider === 'anthropic' ? settings.anthropicKey : settings.openaiKey;
+      // Store native text for the correction page to pick up
+      if (nativeText) {
+        await chrome.storage.local.set({ journalNativeText: nativeText });
+      }
 
-    // Call the API via background script
-    const response = await chrome.runtime.sendMessage({
-      action: 'callAPI',
-      provider: settings.provider,
-      apiKey,
-      prompt,
-    });
-
-    if (!response.success) {
-      throw new Error(response.error);
+      // Navigate to the correction page
+      chrome.tabs.update(tab.id, {
+        url: `https://langcorrect.com/journals/${journalSlug}/make_corrections`,
+      });
+    } catch (error) {
+      setStatus('error', `Error: ${error.message}`);
     }
+  } else if (isCorrectionPage) {
+    // Existing correction flow
+    correctBtn.disabled = true;
+    correctBtn.innerHTML = '<span class="loading"></span>Correcting...';
 
-    // Parse the response
-    const result = parseAIResponse(response.data, sentences);
+    try {
+      // Get any stored native text from the journal page
+      const storage = await chrome.storage.local.get(['journalNativeText']);
+      const storedNativeText = storage.journalNativeText;
 
-    // Apply corrections to the page
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    await chrome.tabs.sendMessage(tab.id, {
-      action: 'applyCorrections',
-      corrections: result.corrections,
-      feedback: result.feedback,
-    });
+      // Clear the stored native text after using it
+      if (storedNativeText) {
+        await chrome.storage.local.remove(['journalNativeText']);
+      }
 
-    setStatus('success', `Applied ${result.corrections.length} corrections! Review and submit.`);
-    correctBtn.textContent = 'Done!';
-  } catch (error) {
-    setStatus('error', `Error: ${error.message}`);
-    correctBtn.textContent = 'Correct';
-    correctBtn.disabled = false;
+      // Build the prompt with native text context if available
+      const prompt = buildPrompt(sentences, null, storedNativeText);
+
+      // Get the API key based on provider
+      const apiKey = settings.provider === 'anthropic' ? settings.anthropicKey : settings.openaiKey;
+
+      // Call the API via background script
+      const response = await chrome.runtime.sendMessage({
+        action: 'callAPI',
+        provider: settings.provider,
+        apiKey,
+        prompt,
+      });
+
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+
+      // Parse the response
+      const result = parseAIResponse(response.data, sentences);
+
+      // Apply corrections to the page
+      await chrome.tabs.sendMessage(tab.id, {
+        action: 'applyCorrections',
+        corrections: result.corrections,
+        feedback: result.feedback,
+      });
+
+      setStatus('success', `Applied ${result.corrections.length} corrections! Review and submit.`);
+      correctBtn.textContent = 'Done!';
+    } catch (error) {
+      setStatus('error', `Error: ${error.message}`);
+      correctBtn.textContent = 'Correct';
+      correctBtn.disabled = false;
+    }
   }
 });
 
@@ -106,15 +154,22 @@ optionsBtn.addEventListener('click', () => {
 });
 
 // Prompt builder (same as src/parser.js)
-function buildPrompt(sentences) {
+function buildPrompt(sentences, level = null, nativeText = null) {
   const numberedSentences = sentences
     .map((s, i) => `${i + 1}. ${s.original}`)
     .join('\n');
 
-  return `You are an English language teacher helping a student improve their writing. Review each sentence and provide corrections.
+  const levelContext = level
+    ? `You are an English language teacher helping a ${level}-level student improve their writing.`
+    : `You are an English language teacher helping a student improve their writing. The student's level is unknown, so adjust your corrections and explanations to be clear and helpful.`;
 
+  const nativeLanguageContext = nativeText
+    ? `\nThe student's native language text for context:\n${nativeText}\n`
+    : '';
+
+  return `${levelContext} Review each sentence and provide corrections and explanations${level ? ` appropriate for ${level} level` : ''}.${nativeLanguageContext}
 For each sentence:
-- If it's correct, mark it as "perfect": true
+- If it's correct, mark it as "perfect": true (omit revised and note)
 - If it needs correction, provide the revised sentence and a brief note explaining the fix
 
 Sentences to review:
@@ -123,16 +178,16 @@ ${numberedSentences}
 Respond ONLY with valid JSON in this exact format:
 {
   "corrections": [
-    {"index": 1, "perfect": true, "revised": "", "note": ""},
-    {"index": 2, "perfect": false, "revised": "The corrected sentence here.", "note": "Brief explanation of the fix."}
+    {"perfect": true},
+    {"perfect": false, "revised": "The corrected sentence here.", "note": "Brief explanation of the fix."}
   ],
-  "feedback": "Overall encouraging feedback for the student (1-2 sentences)."
+  "feedback": "Overall feedback for the student (1-3 sentences). Follow the 'sandwich' pattern."
 }
 
 Important:
-- Include an entry for EVERY sentence, in order
-- For perfect sentences: set perfect=true, revised="", note=""
-- For corrections: set perfect=false, provide revised text and explanation
+- Include an entry for EVERY sentence, in the same order as listed above
+- For perfect sentences: only include "perfect": true (omit revised and note)
+- For corrections: set perfect=false and include both revised text and note
 - Keep notes concise and helpful
 - Be encouraging in the overall feedback`;
 }
@@ -152,13 +207,14 @@ function parseAIResponse(response, sentences) {
     throw new Error('AI response missing corrections array');
   }
 
-  const corrections = parsed.corrections.map(c => {
-    const sentenceIndex = c.index - 1;
-    const sentence = sentences[sentenceIndex];
+  // Validate array length matches
+  if (parsed.corrections.length !== sentences.length) {
+    throw new Error(`Corrections array length (${parsed.corrections.length}) does not match sentences length (${sentences.length})`);
+  }
 
-    if (!sentence) {
-      throw new Error(`Invalid correction index: ${c.index}`);
-    }
+  // Map array position to sentence IDs
+  const corrections = parsed.corrections.map((c, index) => {
+    const sentence = sentences[index];
 
     return {
       id: sentence.id,

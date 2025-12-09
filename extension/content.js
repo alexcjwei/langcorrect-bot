@@ -1,10 +1,13 @@
-// Content script - runs on LangCorrect correction pages
+// Content script - runs on LangCorrect journal pages
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractSentences') {
     const sentences = extractSentences();
     sendResponse({ sentences });
+  } else if (request.action === 'extractNativeText') {
+    const nativeText = extractNativeText();
+    sendResponse({ nativeText });
   } else if (request.action === 'applyCorrections') {
     applyCorrections(request.corrections, request.feedback);
     sendResponse({ success: true });
@@ -29,6 +32,27 @@ function extractSentences() {
   });
 
   return sentences;
+}
+
+function extractNativeText() {
+  const cardBody = document.querySelector('.card-body');
+  if (!cardBody) return null;
+
+  // Find paragraphs with lang attribute that is not 'en'
+  const paragraphs = cardBody.querySelectorAll('p[lang]');
+
+  for (const para of paragraphs) {
+    const lang = para.getAttribute('lang');
+    if (lang && lang !== 'en') {
+      // Get text and clean up HTML line breaks
+      let text = para.textContent;
+      // Remove extra whitespace while preserving content structure
+      text = text.replace(/\s+/g, ' ').trim();
+      return text;
+    }
+  }
+
+  return null;
 }
 
 function applyCorrections(corrections, overallFeedback) {

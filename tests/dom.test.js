@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { JSDOM } from 'jsdom';
-import { extractSentences, applyCorrections, extractLevel } from '../src/dom.js';
+import { extractSentences, applyCorrections, extractLevel, extractNativeText } from '../src/dom.js';
 
 const fixtureHtml = readFileSync('./docs/make_corrections-example.html', 'utf-8');
 
@@ -79,6 +79,76 @@ describe('DOM extraction', () => {
       const level = extractLevel(docWithWhitespace);
 
       expect(level).toBe('B2');
+    });
+  });
+
+  describe('extractNativeText', () => {
+    it('should extract native text from journal page', () => {
+      const journalFixture = readFileSync('./docs/journal-example.html', 'utf-8');
+      const dom = new JSDOM(journalFixture);
+      const journalDoc = dom.window.document;
+
+      const nativeText = extractNativeText(journalDoc);
+
+      expect(nativeText).toContain('最近、いろいろな国の人たちと日本の熊出没について話す機会がありました');
+    });
+
+    it('should return null when native text is not found on journal page', () => {
+      const dom = new JSDOM('<html><body><div>Only English text here</div></body></html>');
+      const docWithoutNative = dom.window.document;
+
+      const nativeText = extractNativeText(docWithoutNative);
+
+      expect(nativeText).toBe(null);
+    });
+
+    it('should extract text from element with lang attribute that differs from English', () => {
+      const dom = new JSDOM(`
+        <html><body>
+          <div class="card-body">
+            <p lang="en">English text here</p>
+            <p lang="ja">日本語のテキスト</p>
+          </div>
+        </body></html>
+      `);
+      const doc = dom.window.document;
+
+      const nativeText = extractNativeText(doc);
+
+      expect(nativeText).toBe('日本語のテキスト');
+    });
+
+    it('should clean up HTML line breaks in native text', () => {
+      const dom = new JSDOM(`
+        <html><body>
+          <div class="card-body">
+            <p lang="en">English text here</p>
+            <p lang="ja">First part<br><br>Second part</p>
+          </div>
+        </body></html>
+      `);
+      const doc = dom.window.document;
+
+      const nativeText = extractNativeText(doc);
+
+      expect(nativeText).toContain('First part');
+      expect(nativeText).toContain('Second part');
+    });
+
+    it('should return null when there is no non-English lang attribute', () => {
+      const dom = new JSDOM(`
+        <html><body>
+          <div class="card-body">
+            <p lang="en">English text</p>
+            <p lang="en">More English text</p>
+          </div>
+        </body></html>
+      `);
+      const doc = dom.window.document;
+
+      const nativeText = extractNativeText(doc);
+
+      expect(nativeText).toBe(null);
     });
   });
 });

@@ -58,6 +58,34 @@ describe('buildPrompt', () => {
     expect(prompt).toContain('Test sentence.');
     expect(prompt).toContain('level is unknown');
   });
+
+  it('should include native text in prompt when provided', () => {
+    const sentences = [{ id: '1', original: 'Test sentence.' }];
+    const nativeText = 'これはネイティブテキストです。';
+
+    const prompt = buildPrompt(sentences, 'B1', nativeText);
+
+    expect(prompt).toContain(nativeText);
+    expect(prompt).toContain('native language');
+  });
+
+  it('should work without native text parameter (backward compatibility)', () => {
+    const sentences = [{ id: '1', original: 'Test sentence.' }];
+
+    const prompt = buildPrompt(sentences, 'A2');
+
+    expect(prompt).toContain('Test sentence.');
+    expect(prompt).toContain('A2');
+  });
+
+  it('should not include native language context when native text is null', () => {
+    const sentences = [{ id: '1', original: 'Test sentence.' }];
+
+    const prompt = buildPrompt(sentences, 'B1', null);
+
+    expect(prompt).toContain('Test sentence.');
+    expect(prompt).not.toContain('native language');
+  });
 });
 
 describe('parseAIResponse', () => {
