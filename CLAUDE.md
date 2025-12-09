@@ -31,6 +31,7 @@ No code before approval.
 * **CQ-2**: Refactor continuously with tests green
 * **CQ-3**: Run tests frequently
 * **CQ-4**: Remove dead/backwards-compatibility code
+* **CQ-5**: type-check is not used in this project (JavaScript)
 
 ---
 
