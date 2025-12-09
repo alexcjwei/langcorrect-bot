@@ -1,4 +1,26 @@
 /**
+ * Extract the language learner's level from the page
+ * @param {Document} document - The DOM document
+ * @returns {string|null} The language level (e.g., "A1", "B2") or null if not found
+ */
+export function extractLevel(document) {
+  const levelSpan = document.querySelector('[data-bs-title="Language level"]');
+
+  if (!levelSpan) {
+    return null;
+  }
+
+  // Clone the span, remove the icon, and get the text
+  const clone = levelSpan.cloneNode(true);
+  const icon = clone.querySelector('i');
+  if (icon) {
+    icon.remove();
+  }
+
+  return clone.textContent.trim();
+}
+
+/**
  * Extract sentences from LangCorrect correction cards
  * @param {Document} document - The DOM document
  * @returns {Array<{id: string, original: string}>} Array of sentence objects

@@ -33,6 +33,31 @@ describe('buildPrompt', () => {
     expect(prompt).toContain('1. First sentence.');
     expect(prompt).toContain('2. Second sentence.');
   });
+
+  it('should include level in prompt when provided', () => {
+    const sentences = [{ id: '1', original: 'Test sentence.' }];
+
+    const prompt = buildPrompt(sentences, 'A1');
+
+    expect(prompt).toContain('A1');
+  });
+
+  it('should mention unknown level when level is null', () => {
+    const sentences = [{ id: '1', original: 'Test sentence.' }];
+
+    const prompt = buildPrompt(sentences, null);
+
+    expect(prompt).toContain('level is unknown');
+  });
+
+  it('should work without level parameter (backward compatibility)', () => {
+    const sentences = [{ id: '1', original: 'Test sentence.' }];
+
+    const prompt = buildPrompt(sentences);
+
+    expect(prompt).toContain('Test sentence.');
+    expect(prompt).toContain('level is unknown');
+  });
 });
 
 describe('parseAIResponse', () => {

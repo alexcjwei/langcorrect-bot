@@ -29,7 +29,7 @@ No code before approval.
 
 * **CQ-1**: DRY; centralize constants (especially design tokens) and utility functions
 * **CQ-2**: Refactor continuously with tests green
-* **CQ-3**: Run type checks + tests frequently
+* **CQ-3**: Run tests frequently
 * **CQ-4**: Remove dead/backwards-compatibility code
 
 ---

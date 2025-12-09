@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { JSDOM } from 'jsdom';
-import { extractSentences, applyCorrections } from '../src/dom.js';
+import { extractSentences, applyCorrections, extractLevel } from '../src/dom.js';
 
 const fixtureHtml = readFileSync('./docs/make_corrections-example.html', 'utf-8');
 
@@ -44,6 +44,41 @@ describe('DOM extraction', () => {
         '1218881', '1218882', '1218883', '1218884',
         '1218885', '1218886', '1218887', '1218888'
       ]);
+    });
+  });
+
+  describe('extractLevel', () => {
+    it('should extract the language level from the page', () => {
+      const level = extractLevel(document);
+
+      expect(level).toBe('A1');
+    });
+
+    it('should return null when level element is not found', () => {
+      const dom = new JSDOM('<html><body><div>No level here</div></body></html>');
+      const docWithoutLevel = dom.window.document;
+
+      const level = extractLevel(docWithoutLevel);
+
+      expect(level).toBe(null);
+    });
+
+    it('should trim whitespace from the level text', () => {
+      const dom = new JSDOM(`
+        <html><body>
+          <span data-bs-title="Language level">
+            <i class="fa-solid fa-graduation-cap"></i>
+
+            B2
+
+          </span>
+        </body></html>
+      `);
+      const docWithWhitespace = dom.window.document;
+
+      const level = extractLevel(docWithWhitespace);
+
+      expect(level).toBe('B2');
     });
   });
 });

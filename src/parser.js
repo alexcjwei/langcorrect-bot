@@ -1,14 +1,19 @@
 /**
  * Build the prompt to send to the AI for corrections
  * @param {Array<{id: string, original: string}>} sentences - Array of sentences to correct
+ * @param {string|null} level - The language learner's level (e.g., "A1", "B2") or null if unknown
  * @returns {string} The prompt string
  */
-export function buildPrompt(sentences) {
+export function buildPrompt(sentences, level = null) {
   const numberedSentences = sentences
     .map((s, i) => `${i + 1}. ${s.original}`)
     .join('\n');
 
-  return `You are an English language teacher helping a student improve their writing. Review each sentence and provide corrections.
+  const levelContext = level
+    ? `You are an English language teacher helping a ${level}-level student improve their writing.`
+    : `You are an English language teacher helping a student improve their writing. The student's level is unknown, so adjust your corrections and explanations to be clear and helpful.`;
+
+  return `${levelContext} Review each sentence and provide corrections and explanations${level ? ` appropriate for ${level} level` : ''}.
 
 For each sentence:
 - If it's correct, mark it as "perfect": true (omit revised and note)
