@@ -74,7 +74,6 @@ npm install
 npm test                   # Run all tests
 npm run test:unit          # Unit tests only
 npm run test:integration   # Integration tests (requires .env with API keys)
-npm run type-check         # Type checking
 ```
 
 ### Test-Driven Approach

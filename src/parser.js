@@ -21,7 +21,7 @@ export function buildPrompt(sentences, level = null) {
 For each sentence:
 - If it's correct, mark it as "perfect": true (omit revised and note)
 - If it needs correction, provide the revised sentence and a brief note explaining the fix
-- For title sentences (marked with [TITLE]): only mark as perfect or skip entirely. Do not attempt to revise post titles.
+- Title sentences are marked with [TITLE]
 
 Sentences to review:
 ${numberedSentences}
@@ -39,7 +39,6 @@ Important:
 - Include an entry for EVERY sentence, in the same order as listed above
 - For perfect sentences: only include "perfect": true (omit revised and note)
 - For corrections: set perfect=false and include both revised text and note
-- For title sentences: treat them as final content that should not be revised
 
 Tips:
 - Focus on meaning first. If the sentence doesn’t make sense, clear that up before worrying about small grammar or spelling issues.
