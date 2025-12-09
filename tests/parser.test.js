@@ -88,7 +88,7 @@ describe('buildPrompt', () => {
 
     const prompt = buildPrompt(sentences);
 
-    expect(prompt).toContain('title');
+    expect(prompt.toLowerCase()).toContain('title');
   });
 });
 

@@ -43,3 +43,8 @@ Thumbs.db
 *.pem
 dist/
 
+# Generated extension bundles
+extension/*-bundle.js
+extension/dom.js
+extension/parser.js
+

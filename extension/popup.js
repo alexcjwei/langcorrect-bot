@@ -1,5 +1,7 @@
 // Popup script
 
+import { buildPrompt, parseAIResponse } from './parser.js';
+
 const statusEl = document.getElementById('status');
 const correctBtn = document.getElementById('correct-btn');
 const optionsBtn = document.getElementById('options-btn');
@@ -105,74 +107,6 @@ optionsBtn.addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
 });
 
-// Prompt builder (same as src/parser.js)
-function buildPrompt(sentences) {
-  const numberedSentences = sentences
-    .map((s, i) => `${i + 1}. ${s.original}`)
-    .join('\n');
-
-  return `You are an English language teacher helping a student improve their writing. Review each sentence and provide corrections.
-
-For each sentence:
-- If it's correct, mark it as "perfect": true
-- If it needs correction, provide the revised sentence and a brief note explaining the fix
-
-Sentences to review:
-${numberedSentences}
-
-Respond ONLY with valid JSON in this exact format:
-{
-  "corrections": [
-    {"index": 1, "perfect": true, "revised": "", "note": ""},
-    {"index": 2, "perfect": false, "revised": "The corrected sentence here.", "note": "Brief explanation of the fix."}
-  ],
-  "feedback": "Overall encouraging feedback for the student (1-2 sentences)."
-}
-
-Important:
-- Include an entry for EVERY sentence, in order
-- For perfect sentences: set perfect=true, revised="", note=""
-- For corrections: set perfect=false, provide revised text and explanation
-- Keep notes concise and helpful
-- Be encouraging in the overall feedback`;
-}
-
-// Response parser (same as src/parser.js)
-function parseAIResponse(response, sentences) {
-  let jsonStr = response.trim();
-
-  const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (codeBlockMatch) {
-    jsonStr = codeBlockMatch[1].trim();
-  }
-
-  const parsed = JSON.parse(jsonStr);
-
-  if (!parsed.corrections || !Array.isArray(parsed.corrections)) {
-    throw new Error('AI response missing corrections array');
-  }
-
-  const corrections = parsed.corrections.map(c => {
-    const sentenceIndex = c.index - 1;
-    const sentence = sentences[sentenceIndex];
-
-    if (!sentence) {
-      throw new Error(`Invalid correction index: ${c.index}`);
-    }
-
-    return {
-      id: sentence.id,
-      perfect: c.perfect,
-      revised: c.revised || '',
-      note: c.note || '',
-    };
-  });
-
-  return {
-    corrections,
-    feedback: parsed.feedback || '',
-  };
-}
 
 // Initialize on load
 init();
