@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { JSDOM } from 'jsdom';
 import { extractSentences, applyCorrections, extractLevel } from '../src/dom.js';
 
-const fixtureHtml = readFileSync('./docs/make_corrections-example.html', 'utf-8');
+const fixtureHtml = readFileSync('./tests/fixtures/make_corrections.example.html', 'utf-8');
 
 describe('DOM extraction', () => {
   let document;
@@ -24,8 +24,8 @@ describe('DOM extraction', () => {
       const sentences = extractSentences(document);
 
       expect(sentences[0]).toEqual({
-        id: '1218881',
-        original: "What My Son's Results Reminded Me Of",
+        id: '1',
+        original: "Sample Title",
       });
     });
 
@@ -33,7 +33,7 @@ describe('DOM extraction', () => {
       const sentences = extractSentences(document);
 
       // The second sentence has an apostrophe encoded as &#39;
-      expect(sentences[1].original).toContain("didn't");
+      expect(sentences[1].original).toContain("isn't");
     });
 
     it('should extract all 8 sentences with correct IDs', () => {
@@ -41,8 +41,8 @@ describe('DOM extraction', () => {
 
       const ids = sentences.map(s => s.id);
       expect(ids).toEqual([
-        '1218881', '1218882', '1218883', '1218884',
-        '1218885', '1218886', '1218887', '1218888'
+        '1', '2', '3', '4',
+        '5', '6', '7', '8'
       ]);
     });
   });
@@ -95,39 +95,39 @@ describe('DOM manipulation', () => {
     it('should fill in correction textarea for a corrected sentence', () => {
       const corrections = [
         {
-          id: '1218882',
+          id: '2',
           perfect: false,
-          revised: 'My son recently found out that he failed the October entrance exam.',
+          revised: 'This is not a sample sentence.',
           note: 'More natural phrasing.',
         },
       ];
 
       applyCorrections(document, corrections);
 
-      const textarea = document.getElementById('js-correction-row-1218882');
-      expect(textarea.value).toBe('My son recently found out that he failed the October entrance exam.');
+      const textarea = document.getElementById('js-correction-row-2');
+      expect(textarea.value).toBe('This is not a sample sentence.');
     });
 
     it('should fill in feedback note textarea', () => {
       const corrections = [
         {
-          id: '1218882',
+          id: '2',
           perfect: false,
-          revised: 'My son recently found out that he failed the October entrance exam.',
+          revised: 'This is not a sample sentence.',
           note: 'More natural phrasing.',
         },
       ];
 
       applyCorrections(document, corrections);
 
-      const noteTextarea = document.getElementById('js-correction-note-1218882');
+      const noteTextarea = document.getElementById('js-correction-note-2');
       expect(noteTextarea.value).toBe('More natural phrasing.');
     });
 
     it('should click the edit button for corrected sentences', () => {
       const corrections = [
         {
-          id: '1218882',
+          id: '2',
           perfect: false,
           revised: 'Changed text',
           note: 'Some note',
@@ -137,14 +137,14 @@ describe('DOM manipulation', () => {
       applyCorrections(document, corrections);
 
       // After clicking edit, the correction box should be visible (d-none removed)
-      const correctionBox = document.querySelector('[data-correction-box="1218882"]');
+      const correctionBox = document.querySelector('[data-correction-box="2"]');
       expect(correctionBox.classList.contains('d-none')).toBe(false);
     });
 
     it('should click the perfect button for perfect sentences', () => {
       const corrections = [
         {
-          id: '1218884',
+          id: '4',
           perfect: true,
           revised: '',
           note: '',
@@ -154,22 +154,22 @@ describe('DOM manipulation', () => {
       applyCorrections(document, corrections);
 
       // The card should have data-action="perfect" after clicking
-      const card = document.querySelector('[data-sentence-id="1218884"]');
+      const card = document.querySelector('[data-sentence-id="4"]');
       expect(card.getAttribute('data-action')).toBe('perfect');
     });
 
     it('should apply multiple corrections', () => {
       const corrections = [
-        { id: '1218881', perfect: true, revised: '', note: '' },
-        { id: '1218882', perfect: false, revised: 'Corrected text', note: 'Note 1' },
-        { id: '1218883', perfect: true, revised: '', note: '' },
+        { id: '1', perfect: true, revised: '', note: '' },
+        { id: '2', perfect: false, revised: 'Corrected text', note: 'Note 1' },
+        { id: '3', perfect: true, revised: '', note: '' },
       ];
 
       applyCorrections(document, corrections);
 
-      expect(document.querySelector('[data-sentence-id="1218881"]').getAttribute('data-action')).toBe('perfect');
-      expect(document.getElementById('js-correction-row-1218882').value).toBe('Corrected text');
-      expect(document.querySelector('[data-sentence-id="1218883"]').getAttribute('data-action')).toBe('perfect');
+      expect(document.querySelector('[data-sentence-id="1"]').getAttribute('data-action')).toBe('perfect');
+      expect(document.getElementById('js-correction-row-2').value).toBe('Corrected text');
+      expect(document.querySelector('[data-sentence-id="3"]').getAttribute('data-action')).toBe('perfect');
     });
 
     it('should set overall feedback', () => {
